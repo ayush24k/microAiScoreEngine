@@ -1,5 +1,5 @@
-import { getGemini, getModel } from './client'
-import type { MatchResponse } from './types'
+import { getGemini, getModel } from './client.js'
+import type { MatchResponse } from './types.js'
 
 export async function runGeminiMatch(
   cvText: string,

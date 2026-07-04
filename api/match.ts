@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import type { MatchRequest } from './_lib/types'
-import { sha256, findOrCreateJob, findOrCreateCandidate, getCachedMatch, saveCachedMatch } from './_lib/db'
-import { runGeminiMatch } from './_lib/gemini'
+import type { MatchRequest } from './_lib/types.js'
+import { sha256, findOrCreateJob, findOrCreateCandidate, getCachedMatch, saveCachedMatch } from './_lib/db.js'
+import { runGeminiMatch } from './_lib/gemini.js'
 
 // ── Vercel Serverless Handler ─────────────────────────────────────────────────
 export default async function handler(req: VercelRequest, res: VercelResponse) {

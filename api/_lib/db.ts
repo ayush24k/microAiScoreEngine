@@ -1,6 +1,6 @@
 import { createHash } from 'crypto'
-import { getSupabase } from './client'
-import type { MatchResponse } from './types'
+import { getSupabase } from './client.js'
+import type { MatchResponse } from './types.js'
 
 export function sha256(text: string): string {
   return createHash('sha256').update(text).digest('hex')
