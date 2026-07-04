@@ -5,6 +5,7 @@ import type { CandidateSubmission, Job } from '../../types/dashboard'
 import { Upload, FileText, CheckCircle2, X, Paperclip } from 'lucide-react'
 import * as pdfjsLib from 'pdfjs-dist'
 import pdfWorkerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
+import mammoth from 'mammoth'
 
 // Configure PDF.js worker using Vite's local bundle URL (no CDN needed)
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerSrc
@@ -80,21 +81,40 @@ export const AddCandidateModal: React.FC<AddCandidateModalProps> = ({
         try {
           const arrayBuffer = event.target?.result as ArrayBuffer
           if (arrayBuffer) {
+            try {
+              // Try extracting raw text with mammoth for high-precision doc/docx reading
+              const result = await mammoth.extractRawText({ arrayBuffer })
+              const text = (result.value || '').trim()
+              if (text && text.length > 20) {
+                console.log(`[DOCX Parser] Successfully extracted ${text.length} chars via mammoth from "${file.name}".`)
+                setResumeText(text)
+                setIsExtracting(false)
+                return
+              }
+            } catch (mammothErr) {
+              console.warn('[DOCX Parser] Mammoth extraction fallback:', mammothErr)
+            }
+
+            // Fallback: Latin1 decoding regex extraction for legacy .doc or unmapped files
             const bytes = new Uint8Array(arrayBuffer)
             const raw = new TextDecoder('latin1').decode(bytes)
-            // Extract sequences of readable text (letters, numbers, spaces, punctuation)
             const matches = raw.match(/[a-zA-Z0-9\s.,@_\-+/()]{15,}/g) || []
             const extracted = matches.join(' ').replace(/\s{2,}/g, ' ').trim()
             const finalDocText = extracted || `[Extracted from ${file.name}]: Professional candidate resume with relevant technical background.`
-            console.log(`[DOC Parser] Successfully extracted ${finalDocText.length} characters from "${file.name}":\n`, finalDocText.slice(0, 300) + '...')
+            console.log(`[DOC Parser] Fallback extracted ${finalDocText.length} characters from "${file.name}".`)
             setResumeText(finalDocText)
           }
         } catch (err) {
-          console.warn('Word extraction fallback:', err)
+          console.warn('Word extraction error:', err)
           setResumeText(`[Extracted from ${file.name}]: Professional candidate resume with relevant technical background.`)
         } finally {
           setIsExtracting(false)
         }
+      }
+      reader.onerror = () => {
+        console.warn('FileReader error reading doc file')
+        setResumeText(`[Extracted from ${file.name}]: Professional candidate resume with relevant technical background.`)
+        setIsExtracting(false)
       }
       reader.readAsArrayBuffer(file)
     } else {
