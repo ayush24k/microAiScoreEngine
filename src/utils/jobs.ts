@@ -7,7 +7,7 @@ import type { Job } from '../types/dashboard'
 export async function fetchActiveJobs(tenantId?: string): Promise<Job[]> {
   let query = supabase
     .from('jobs')
-    .select('id, title, requirements, description, tenant_id')
+    .select('id, title, requirements, description, tenant_id, created_at')
     .order('created_at', { ascending: true })
 
   if (tenantId) {
@@ -32,5 +32,6 @@ export async function fetchActiveJobs(tenantId?: string): Promise<Job[]> {
     requirements: row.requirements as string[] | undefined,
     description: row.description as string | undefined,
     tenant_id: row.tenant_id ? String(row.tenant_id) : undefined,
+    created_at: row.created_at ? String(row.created_at) : undefined,
   }))
 }

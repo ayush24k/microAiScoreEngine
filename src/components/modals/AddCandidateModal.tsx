@@ -285,7 +285,18 @@ export const AddCandidateModal: React.FC<AddCandidateModalProps> = ({
             variant="solid"
             disabled={isSubmitting || isExtracting || (inputMode === 'file' && !attachedFile && !resumeText.trim())}
           >
-            {isExtracting ? 'Parsing PDF...' : (isSubmitting ? 'Scoring...' : 'Run match →')}
+            {isExtracting ? (
+              'Parsing PDF...'
+            ) : isSubmitting ? (
+              'Scoring...'
+            ) : (
+              <span className="inline-flex items-center gap-[6px]">
+                Run match
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="m9 18 6-6-6-6" />
+                </svg>
+              </span>
+            )}
           </Button>
         </div>
       </form>

@@ -9,29 +9,35 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ selectedTenant, onSelectTenant }) => {
   return (
-    <aside className="w-[200px] shrink-0">
-      <div className="p-[16px] bg-[var(--surface)] border border-[var(--border)] rounded-[12px] shadow-sm">
-        <div className="text-[13px] font-bold text-[var(--ink-soft)] uppercase tracking-wider mb-[12px]">
-          Tenants
-        </div>
-        <div className="flex flex-col gap-[8px]">
-          {TENANTS.map((name) => {
-            const isSelected = selectedTenant === name
-            return (
-              <button
-                key={name}
-                onClick={() => onSelectTenant(name)}
-                className={`w-full py-[8px] px-[12px] rounded-[8px] text-[14px] transition-all text-left capitalize ${
-                  isSelected
-                    ? 'bg-[var(--accent)] text-white font-semibold shadow-2xs'
-                    : 'bg-[var(--bg)] text-[var(--ink)] hover:bg-[rgba(0,0,0,0.04)] border border-[var(--border)]'
+    <aside className="p-[36px_20px] sticky top-[60px] self-start border-r border-[var(--border)] min-h-[calc(100vh-60px)] max-md:static max-md:p-[18px_20px_0] max-md:border-r-0 max-md:border-b max-md:border-[var(--border)] max-md:min-h-0">
+      <p className="text-[11px] font-semibold tracking-[0.08em] uppercase text-[var(--ink-faint)] m-[0_0_14px_2px]">
+        Tenants
+      </p>
+      <div className="flex flex-col gap-[2px] max-md:flex-row max-md:overflow-x-auto max-md:gap-[6px] max-md:pb-[16px]">
+        {TENANTS.map((name) => {
+          const isSelected = selectedTenant.toLowerCase() === name.toLowerCase()
+          return (
+            <button
+              key={name}
+              onClick={() => onSelectTenant(name)}
+              className={`flex items-center gap-[9px] w-full text-left py-[8px] px-[10px] rounded-[7px] border-none text-[14px] font-medium cursor-pointer transition-all duration-150 capitalize max-md:whitespace-nowrap ${
+                isSelected
+                  ? 'bg-[var(--surface)] text-[var(--ink)] font-semibold shadow-2xs'
+                  : 'bg-transparent text-[var(--ink-soft)] hover:bg-[var(--surface)] hover:text-[var(--ink)]'
+              }`}
+            >
+              <span
+                className={`w-[6px] h-[6px] rounded-full shrink-0 transition-colors ${
+                  isSelected ? 'bg-[var(--accent)]' : 'bg-[var(--border-strong)]'
                 }`}
-              >
-                {name}
-              </button>
-            )
-          })}
-        </div>
+              />
+              {name}
+            </button>
+          )
+        })}
+      </div>
+      <div className="mt-[32px] mx-[2px] pt-[20px] border-t border-[var(--border)] text-[12.5px] leading-[1.6] text-[var(--ink-faint)] max-md:hidden">
+        Switch tenants to see the requisitions and matches that belong to them.
       </div>
     </aside>
   )
