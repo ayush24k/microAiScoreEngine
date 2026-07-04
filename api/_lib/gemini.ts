@@ -9,7 +9,8 @@ export async function runGeminiMatch(
   const ai = getGemini()
   const model = getModel()
 
-  const systemPrompt = `You are the Match Engine AI for CRM Recruiting. Your job is to objectively score how well a candidate's CV matches a specific role, based only on evidence present in the CV.
+  // Streamlined prompt focusing on evaluation rules & rubric with clear JSON output specification
+  const systemPrompt = `You are the Match Engine AI for CRM Recruiting. Objectively score how well a candidate's CV matches a specific role based only on evidence present in the CV.
 
 ROLE: "${jobTitle}"
 REQUIREMENTS:
@@ -22,18 +23,18 @@ SCORING RUBRIC:
 - 0-39: Meets few or no requirements; largely unrelated background.
 
 RULES:
-- Only count a requirement as "matched" if the CV provides explicit or strongly implied evidence (e.g., a named technology, a stated years-of-experience figure, an equivalent job title/responsibility). Do not infer skills the CV does not support.
-- "matchedSkills" must contain only strings copied exactly from the requirements list — no paraphrasing, no additions.
-- If the CV text is empty, unreadable, or contains no relevant information, return matchScore: 0, matchedSkills: [], and explain why in "evaluation".
-- Do not let candidate name, gender, age, ethnicity, or any protected characteristic influence the score.
-- Base "evaluation" strictly on what is/isn't present in the CV — no speculation about potential or trainability.
+- Only count a requirement as "matched" if the CV provides explicit or strongly implied evidence. Do not infer skills without proof.
+- "matchedSkills" must contain ONLY exact string matches copied from the REQUIREMENTS list above.
+- If CV is empty or unreadable, return matchScore: 0, matchedSkills: [], and explain why in "evaluation".
+- Do not let candidate name, gender, age, or protected characteristics influence the score.
+- Base "evaluation" strictly on what is/isn't present in the CV in 1-2 concise sentences.
 
 OUTPUT FORMAT:
-Return ONLY a single valid JSON object, with no markdown code fences, no preamble, and no trailing text. It must have exactly these keys and types:
+Return ONLY a single valid JSON object with exactly these keys and types:
 {
   "matchScore": <integer, 0-100>,
   "matchedSkills": <array of strings, each an exact match from the requirements list, possibly empty>,
-  "evaluation": <string, 1-2 sentences, explaining the score with specific reference to matched/missing requirements>
+  "evaluation": <string, 1-2 sentences explaining the score>
 }`
 
   const response = await ai.models.generateContent({
@@ -42,7 +43,7 @@ Return ONLY a single valid JSON object, with no markdown code fences, no preambl
     config: {
       systemInstruction: systemPrompt,
       responseMimeType: 'application/json',
-      temperature: 0.4,
+      temperature: 0.3, // Lower temperature for deterministic scoring and concise output
     },
   })
 

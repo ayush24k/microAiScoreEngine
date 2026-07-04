@@ -23,8 +23,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'candidateData.name is required' })
     }
 
-    // Step 1 — Generate SHA-256 resume hash
-    const resumeHash = sha256(cvText.trim())
+    // Normalize CV text: collapse whitespace, strip control characters, and cap length to ~12,000 chars (~3,000 tokens)
+    // This maximizes SHA-256 database cache hits and prevents input token bloat sent to Google Gemini!
+    const normalizedCv = cvText
+      .replace(/\s+/g, ' ')
+      .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
+      .trim()
+      .slice(0, 12000)
+
+    // Step 1 — Generate SHA-256 resume hash from normalized CV
+    const resumeHash = sha256(normalizedCv)
 
     // Step 2 — Find or create job record in Supabase
     const jobId = await findOrCreateJob(jobTitle || 'Unknown Role', vacancyRequirements || [])
@@ -33,7 +41,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const candidateId = await findOrCreateCandidate(
       candidateData.name,
       candidateData.email || '',
-      cvText,
+      normalizedCv,
       resumeHash
     )
 
@@ -44,7 +52,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Step 5 — Cache miss: evaluate via Google Gemini AI
-    const matchResult = await runGeminiMatch(cvText, jobTitle || 'Unknown Role', vacancyRequirements || [])
+    const matchResult = await runGeminiMatch(normalizedCv, jobTitle || 'Unknown Role', vacancyRequirements || [])
 
     // Step 6 — Store evaluation results in Supabase cache
     await saveCachedMatch(candidateId, jobId, matchResult)
