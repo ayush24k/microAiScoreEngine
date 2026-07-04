@@ -3,6 +3,7 @@ export interface Job {
   title: string
   requirements?: string[]
   description?: string
+  tenant_id?: string
 }
 
 export interface CandidateSubmission {

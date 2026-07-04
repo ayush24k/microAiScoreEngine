@@ -6,20 +6,22 @@ export function sha256(text: string): string {
   return createHash('sha256').update(text).digest('hex')
 }
 
-export async function findOrCreateJob(title: string, requirements: string[]): Promise<string> {
+export async function findOrCreateJob(title: string, requirements: string[], tenantId?: string): Promise<string> {
   const supabase = getSupabase()
-  const { data: existing } = await supabase
+  let query = supabase
     .from('jobs')
     .select('id')
     .eq('title', title)
-    .limit(1)
-    .single()
+
+  if (tenantId) query = query.eq('tenant_id', tenantId)
+
+  const { data: existing } = await query.limit(1).single()
 
   if (existing?.id) return existing.id
 
   const { data: created, error } = await supabase
     .from('jobs')
-    .insert({ title, requirements })
+    .insert({ title, requirements, tenant_id: tenantId || null })
     .select('id')
     .single()
 
@@ -31,21 +33,24 @@ export async function findOrCreateCandidate(
   name: string,
   email: string,
   resume: string,
-  resumeHash: string
+  resumeHash: string,
+  tenantId?: string
 ): Promise<string> {
   const supabase = getSupabase()
-  const { data: existing } = await supabase
+  let query = supabase
     .from('candidates')
     .select('id')
     .eq('resume_hash', resumeHash)
-    .limit(1)
-    .single()
+
+  if (tenantId) query = query.eq('tenant_id', tenantId)
+
+  const { data: existing } = await query.limit(1).single()
 
   if (existing?.id) return existing.id
 
   const { data: created, error } = await supabase
     .from('candidates')
-    .insert({ name, email, resume, resume_hash: resumeHash })
+    .insert({ name, email, resume, resume_hash: resumeHash, tenant_id: tenantId || null })
     .select('id')
     .single()
 
@@ -53,15 +58,17 @@ export async function findOrCreateCandidate(
   return created.id
 }
 
-export async function getCachedMatch(candidateId: string, jobId: string): Promise<MatchResponse | null> {
+export async function getCachedMatch(candidateId: string, jobId: string, tenantId?: string): Promise<MatchResponse | null> {
   const supabase = getSupabase()
-  const { data } = await supabase
+  let query = supabase
     .from('candidate_matches')
     .select('match_score, matched_skills, evaluation')
     .eq('candidate_id', candidateId)
     .eq('job_id', jobId)
-    .limit(1)
-    .single()
+
+  if (tenantId) query = query.eq('tenant_id', tenantId)
+
+  const { data } = await query.limit(1).single()
 
   if (!data) return null
   return {
@@ -74,7 +81,8 @@ export async function getCachedMatch(candidateId: string, jobId: string): Promis
 export async function saveCachedMatch(
   candidateId: string,
   jobId: string,
-  result: MatchResponse
+  result: MatchResponse,
+  tenantId?: string
 ): Promise<void> {
   const supabase = getSupabase()
   await supabase.from('candidate_matches').insert({
@@ -83,5 +91,6 @@ export async function saveCachedMatch(
     match_score: result.matchScore,
     matched_skills: result.matchedSkills,
     evaluation: result.evaluation,
+    tenant_id: tenantId || null,
   })
 }

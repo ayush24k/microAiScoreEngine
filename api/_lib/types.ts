@@ -3,6 +3,7 @@ export interface MatchRequest {
   cvText: string // already lowercase or trimmed
   vacancyRequirements: string[]
   jobTitle: string
+  tenantId?: string
 }
 
 export interface MatchResponse {

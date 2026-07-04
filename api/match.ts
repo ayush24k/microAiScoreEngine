@@ -14,7 +14,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const body: MatchRequest = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
-    const { candidateData, cvText, vacancyRequirements, jobTitle } = body
+    const { candidateData, cvText, vacancyRequirements, jobTitle, tenantId } = body
 
     if (!cvText?.trim()) {
       return res.status(400).json({ error: 'cvText is required' })
@@ -35,18 +35,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const resumeHash = sha256(normalizedCv)
 
     // Step 2 — Find or create job record in Supabase
-    const jobId = await findOrCreateJob(jobTitle || 'Unknown Role', vacancyRequirements || [])
+    const jobId = await findOrCreateJob(jobTitle || 'Unknown Role', vacancyRequirements || [], tenantId)
 
     // Step 3 — Find or create candidate record (deduplicated by resume_hash)
     const candidateId = await findOrCreateCandidate(
       candidateData.name,
       candidateData.email || '',
       normalizedCv,
-      resumeHash
+      resumeHash,
+      tenantId
     )
 
     // Step 4 — Check candidate_matches cache
-    const cached = await getCachedMatch(candidateId, jobId)
+    const cached = await getCachedMatch(candidateId, jobId, tenantId)
     if (cached) {
       return res.status(200).json({ ...cached, fromCache: true })
     }
@@ -55,7 +56,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const matchResult = await runGeminiMatch(normalizedCv, jobTitle || 'Unknown Role', vacancyRequirements || [])
 
     // Step 6 — Store evaluation results in Supabase cache
-    await saveCachedMatch(candidateId, jobId, matchResult)
+    await saveCachedMatch(candidateId, jobId, matchResult, tenantId)
 
     // Step 7 — Return evaluation response
     return res.status(200).json({ ...matchResult, fromCache: false })

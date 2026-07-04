@@ -2,13 +2,19 @@ import { supabase } from './supabase'
 import type { Job } from '../types/dashboard'
 
 /**
- * Fetches active job listings from Supabase `jobs` table.
+ * Fetches active job listings from Supabase `jobs` table, optionally filtered by tenant_id.
  */
-export async function fetchActiveJobs(): Promise<Job[]> {
-  const { data, error, status, statusText } = await supabase
+export async function fetchActiveJobs(tenantId?: string): Promise<Job[]> {
+  let query = supabase
     .from('jobs')
-    .select('id, title, requirements, description')
+    .select('id, title, requirements, description, tenant_id')
     .order('created_at', { ascending: true })
+
+  if (tenantId) {
+    query = query.eq('tenant_id', tenantId)
+  }
+
+  const { data, error, status, statusText } = await query
 
   // Log full debug info to browser console
   console.log('[fetchActiveJobs] status:', status, statusText)
@@ -25,5 +31,6 @@ export async function fetchActiveJobs(): Promise<Job[]> {
     title: String(row.title),
     requirements: row.requirements as string[] | undefined,
     description: row.description as string | undefined,
+    tenant_id: row.tenant_id ? String(row.tenant_id) : undefined,
   }))
 }

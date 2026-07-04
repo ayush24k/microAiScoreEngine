@@ -9,6 +9,7 @@ import './App.css'
 
 export default function App() {
   const matchSectionRef = useRef<HTMLDivElement>(null)
+  const [selectedTenant, setSelectedTenant] = useState<string>('ayush')
   const [jobs, setJobs] = useState<Job[]>([])
   const [jobsLoading, setJobsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -27,13 +28,17 @@ export default function App() {
     fromCache?: boolean
   } | null>(null)
 
-  // ── Load active jobs from Supabase on mount ────────────────────────────────
+  // ── Load active jobs from Supabase when selectedTenant changes ─────────────
   useEffect(() => {
-    fetchActiveJobs()
-      .then((remoteJobs) => setJobs(remoteJobs))
+    setJobsLoading(true)
+    fetchActiveJobs(selectedTenant)
+      .then((remoteJobs) => {
+        setJobs(remoteJobs)
+        setSelectedJob(null)
+      })
       .catch((err) => console.warn('[App] Failed to load jobs from Supabase:', err.message))
       .finally(() => setJobsLoading(false))
-  }, [])
+  }, [selectedTenant])
 
   const handleJobClick = (job: Job) => {
     setSelectedJob(job)
@@ -63,6 +68,7 @@ export default function App() {
         cvText: submission.resumeText,
         vacancyRequirements: targetJob.requirements || [],
         jobTitle: targetJob.title,
+        tenantId: selectedTenant,
       })
 
       const data = response.data
@@ -92,7 +98,7 @@ export default function App() {
   }
 
   return (
-    <Layout>
+    <Layout selectedTenant={selectedTenant} onSelectTenant={setSelectedTenant}>
       {/* Active Jobs Section */}
       <JobsSection
         jobs={jobs}
