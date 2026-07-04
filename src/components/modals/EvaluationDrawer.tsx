@@ -157,14 +157,14 @@ export const EvaluationDrawer: React.FC<EvaluationDrawerProps> = ({
                     Match score {scoreResult.fromCache && <span className="text-[10px] bg-[var(--border)] px-[6px] py-[2px] rounded ml-[6px] text-[var(--ink-soft)] font-normal">Cached</span>}
                   </p>
                   <p className="text-[12.5px] text-[var(--ink-faint)] m-0">
-                    {scoreResult.matchedSkills.length} requirement{scoreResult.matchedSkills.length === 1 ? '' : 's'} verified
+                    {scoreResult.matchedSkills.length} matched skill{scoreResult.matchedSkills.length === 1 ? '' : 's'}
                   </p>
                 </div>
               </div>
 
               {/* Matched skills chips */}
               <p className="text-[11.5px] font-semibold uppercase tracking-[0.04em] text-[var(--ink-faint)] m-[0_0_10px]">
-                Verified Skills
+                Matched Skills
               </p>
               {scoreResult.matchedSkills.length > 0 ? (
                 <div className="flex flex-wrap gap-[7px] mb-[24px]">

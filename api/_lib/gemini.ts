@@ -1,4 +1,5 @@
 import { getGemini, getModel } from './client.js'
+import { Type } from '@google/genai'
 import type { MatchResponse } from './types.js'
 
 export async function runGeminiMatch(
@@ -27,15 +28,7 @@ RULES:
 - "matchedSkills" must contain ONLY exact string matches copied from the REQUIREMENTS list above.
 - If CV is empty or unreadable, return matchScore: 0, matchedSkills: [], and explain why in "evaluation".
 - Do not let candidate name, gender, age, or protected characteristics influence the score.
-- Base "evaluation" strictly on what is/isn't present in the CV in 1-2 concise sentences.
-
-OUTPUT FORMAT:
-Return ONLY a single valid JSON object with exactly these keys and types:
-{
-  "matchScore": <integer, 0-100>,
-  "matchedSkills": <array of strings, each an exact match from the requirements list, possibly empty>,
-  "evaluation": <string, 1-2 sentences explaining the score>
-}`
+- Base "evaluation" strictly on what is/isn't present in the CV in 1-2 concise sentences.`
 
   const response = await ai.models.generateContent({
     model,
@@ -43,6 +36,27 @@ Return ONLY a single valid JSON object with exactly these keys and types:
     config: {
       systemInstruction: systemPrompt,
       responseMimeType: 'application/json',
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          matchScore: {
+            type: Type.INTEGER,
+            description: 'An integer score between 0 and 100 representing how well the candidate matches the requirements.',
+          },
+          matchedSkills: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.STRING,
+            },
+            description: 'An array of exact string matches copied from the job requirements list that are evidenced in the CV.',
+          },
+          evaluation: {
+            type: Type.STRING,
+            description: '1 to 2 concise sentences explaining the score based on evidence in the CV.',
+          },
+        },
+        required: ['matchScore', 'matchedSkills', 'evaluation'],
+      },
       temperature: 0.3, // Lower temperature for deterministic scoring and concise output
     },
   })
