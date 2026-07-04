@@ -9,7 +9,7 @@ interface JobRowProps {
 
 export const JobRow: React.FC<JobRowProps> = ({ job, onJobClick }) => {
   const [isExpanded, setIsExpanded] = useState(false)
-  const reqs = job.requirements ? job.requirements.join(', ') : (job.tags ? job.tags.join(', ') : '')
+  const reqs = job.requirements ? job.requirements.join(', ') : ''
   
   const isLongDesc = Boolean(job.description && job.description.length > 75)
   const descText = job.description 

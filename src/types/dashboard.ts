@@ -1,7 +1,6 @@
 export interface Job {
   id: string
   title: string
-  tags?: string[]
   requirements?: string[]
   description?: string
 }
